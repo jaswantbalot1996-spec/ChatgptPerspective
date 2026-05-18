@@ -196,6 +196,31 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
+## Deployment
+
+The project is deployed as two separate services:
+
+| Service | Platform | Purpose |
+|---------|----------|---------|
+| Backend (`server/`) | [Render](https://render.com) | Express API, Gemini SDK, API key storage |
+| Frontend (`src/`) | [Vercel](https://vercel.com) | Vite + React app, static hosting |
+
+**Backend (Render):**
+- Root Directory: `server`
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start`
+- Environment Variables: `LLM_API_KEY`, `LLM_MODEL`, `FRONTEND_URL` (set to Vercel URL)
+
+**Frontend (Vercel):**
+- Root Directory: `/`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Environment Variables: `VITE_API_BASE_URL` (set to Render URL)
+
+> After deploying both, update `FRONTEND_URL` on Render to the Vercel URL to enable CORS.
+
+---
+
 ## Build for Production
 
 ```bash

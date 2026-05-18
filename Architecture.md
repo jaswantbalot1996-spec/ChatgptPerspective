@@ -4,6 +4,17 @@
 
 ---
 
+## Deployment Status
+
+| Layer | Platform | Notes |
+|-------|----------|-------|
+| Backend (`server/`) | Render | Express + Gemini SDK; API key secured as env var |
+| Frontend (`src/`) | Vercel | Vite static build; `VITE_API_BASE_URL` points to Render |
+
+Both services are live and connected. CORS is configured via `FRONTEND_URL` on the Render service.
+
+---
+
 ## Existing Foundation: ChatGPT Shell (`ChatgptUI.html`)
 
 > **Context:** The Growth PM has already authored a production-faithful ChatGPT shell component. This is the starting point — not a blank canvas. All subsequent phases build on top of it, not alongside it.

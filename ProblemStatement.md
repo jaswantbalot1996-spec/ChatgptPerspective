@@ -345,6 +345,11 @@ VITE_API_BASE_URL=http://localhost:3001
 The frontend LLM service layer (`src/services/llmService.ts`) makes `fetch` calls to the Express backend.
 The backend (`server/`) holds the Gemini SDK, API key, and prompt engineering — nothing sensitive reaches the browser.
 
+**Deployment:**
+- Backend deployed to **Render** (Node.js + Express)
+- Frontend deployed to **Vercel** (Vite + React)
+- Both services are live and connected via environment variables (`VITE_API_BASE_URL` on Vercel → Render URL; `FRONTEND_URL` on Render → Vercel URL)
+
 **Backend API (Express — `server/src/`):**
 - `POST /api/explore` — returns `{ answer, prompts[] }` (replaces generatePrimaryAnswer + generatePerspectivePrompts)
 - `POST /api/expand` — returns `{ title, content, risks[], ..., childPrompts[] }` (replaces expandPerspectiveBranch + generateRecursivePrompts)

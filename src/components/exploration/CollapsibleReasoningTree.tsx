@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useExplorationStore } from '../../store/explorationStore'
 import RecursiveReasoningNode from './RecursiveReasoningNode'

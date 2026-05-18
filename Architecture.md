@@ -91,13 +91,22 @@
    ```
    tailwindcss framer-motion zustand clsx lucide-react
    ```
-3. Create `.env` at project root:
+3. Create environment files:
+
+   **Frontend** — `.env` at project root:
    ```
-   VITE_LLM_API_KEY=your_google_api_key_here
-   VITE_LLM_MODEL=gemini-2.0-flash-lite
+   VITE_API_BASE_URL=http://localhost:3001
    ```
-   Add `.env` to `.gitignore` — **never commit the API key.**
-   > Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey). No `BASE_URL` env var needed — the Gemini SDK constructs the endpoint internally.
+
+   **Backend** — `server/.env`:
+   ```
+   LLM_API_KEY=your_google_api_key_here
+   LLM_MODEL=gemini-2.5-flash-lite
+   PORT=3001
+   FRONTEND_URL=http://localhost:5173
+   ```
+   Add `server/.env` and `.env` to `.gitignore` — **never commit the API key.**
+   > Get your key from [Google AI Studio](https://aistudio.google.com/app/apikey). The `LLM_API_KEY` is read only by the backend server and never exposed to the browser.
 4. Migrate `ChatgptUI.html` → `src/components/chat/ChatShell.tsx` (already uses `lucide-react` icons)
 5. Extend TailwindCSS config:
    - Keep existing ChatGPT palette (`#212121`, `#171717`, `#10a37f`) — **do not change**
@@ -222,31 +231,27 @@ export interface ScenarioSeed {
 
 **File:** `src/services/llmService.ts`
 
-**Install Google Generative AI SDK:**
-```
-npm install @google/generative-ai
-```
+**File:** `src/services/llmService.ts` (frontend — fetch wrapper only)
 
-**API key access (safe):**
+**Backend LLM service:** `server/src/services/llmService.ts` (Gemini SDK + retry logic)
+
+**The frontend no longer calls Gemini directly.** `src/services/llmService.ts` only makes `fetch` calls to the Express backend at `VITE_API_BASE_URL`. The Gemini SDK, API key, and prompt engineering are all in `server/`.
+
+**Backend API endpoints (Express, `server/src/routes/generate.ts`):**
+- `POST /api/explore` → calls `explore()` → returns `{ answer, prompts[] }`
+- `POST /api/expand` → calls `expand()` → returns `{ title, content, risks[], ..., childPrompts[] }`
+
+**Frontend fetch pattern:**
 ```ts
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_LLM_API_KEY);
-const model = genAI.getGenerativeModel({ model: import.meta.env.VITE_LLM_MODEL });
+async function post<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  return res.json()
+}
 ```
-> `import.meta.env.VITE_LLM_API_KEY` is injected at build time by Vite. The key is never in source code or committed to git.
-
-**Gemini API call pattern:**
-```ts
-const result = await model.generateContent({
-  contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-  systemInstruction: SYSTEM_PROMPT,   // plain string — SDK requires this format
-  generationConfig: { responseMimeType: 'application/json' },
-});
-const text = result.response.text();
-```
-
-> **Note:** `systemInstruction` must be a plain string. Passing `{ parts: [...] }` causes a TypeScript error with `@google/generative-ai@0.21+`.
 
 **Active engine-facing functions (2 combined calls replace 4 sequential ones):**
 
@@ -680,7 +685,7 @@ User clicks breadcrumb
 | 10 | Animations throughout ✅ | All phases |
 | 11 | Bonus features (MiniMap, heat indicators) ✅ | Phase 8+ |
 
-> **Post-launch optimisation:** API calls halved by combining sequential pairs into single JSON calls (`generateRootExploration`, `expandBranchWithPrompts`). Model changed to `gemini-2.0-flash-lite` for free-tier sustainability.
+> **Post-launch optimisation:** API calls halved by combining sequential pairs into single JSON calls (`generateRootExploration`, `expandBranchWithPrompts`). Model changed to `gemini-2.5-flash-lite`. Gemini SDK and all LLM business logic moved to the Express backend (`server/`) — the frontend `llmService.ts` now only makes `fetch` calls to the backend API, keeping the API key out of the browser entirely.
 
 ---
 
@@ -694,7 +699,7 @@ User clicks breadcrumb
 | Intra-branch sub-collapse (depth 2–3 only) | Engine — within one branch's sub-tree, expanding a child collapses its own siblings |
 | Root-level chips always visible | `PerspectivePromptChips` — never unmounts; chips show explored/unexplored state |
 | Collapsed nodes are never deleted | Store — `isExpanded: false`, content preserved |
-| API key never in source code | `import.meta.env.VITE_LLM_API_KEY` only, `.env` in `.gitignore` |
+| API key never in browser | `LLM_API_KEY` lives only in `server/.env`; frontend never sees it |
 | LLM error falls back to mock data | `llmService` — all functions return discriminated union |
 | Branch content never auto-modifies root answer | Engine — root is read-only after generation |
 | Custom branches blocked at depth 3 | Engine — `createCustomBranch` depth guard |

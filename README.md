@@ -27,7 +27,8 @@ When you ask a question, you don't just get an answer. You get:
 |-------|-----------|
 | Framework | Vite 6 + React 18 + TypeScript |
 | State | Zustand 5 |
-| LLM | Google Gemini (`gemini-2.0-flash-lite`) via `@google/generative-ai` |
+| LLM | Google Gemini (`gemini-2.5-flash-lite`) via `@google/generative-ai` (server-side) |
+| Backend | Node.js + Express + TypeScript (`server/`) |
 | Animation | Framer Motion 11 |
 | Styling | TailwindCSS 3 |
 | Icons | Lucide React |
@@ -37,6 +38,7 @@ When you ask a question, you don't just get an answer. You get:
 ## Project Structure
 
 ```
+# Frontend (Vite + React)
 src/
 ├── components/
 │   ├── chat/
@@ -61,18 +63,34 @@ src/
 ├── engine/
 │   └── perspectiveEngine.ts           — orchestration: depth guards, branch logic
 ├── services/
-│   └── llmService.ts                  — all Gemini API calls
+│   └── llmService.ts                  — fetch wrapper that calls the backend API
 ├── store/
 │   └── explorationStore.ts            — Zustand store + engine adapter
-├── prompts/
-│   └── systemPrompts.ts               — prompt engineering constants
 ├── data/
 │   └── fallback/
-│       └── genericFallback.ts         — offline fallback content
+│       └── genericFallback.ts         — client-side fallback content
 ├── types/
 │   └── index.ts                       — shared TypeScript types
 └── animations/
     └── variants.ts                    — Framer Motion animation variants
+
+# Backend (Node.js + Express)
+server/
+├── src/
+│   ├── routes/
+│   │   └── generate.ts                — POST /api/explore, POST /api/expand
+│   ├── services/
+│   │   └── llmService.ts              — Gemini SDK calls + retry logic
+│   ├── prompts/
+│   │   └── systemPrompts.ts           — prompt engineering constants
+│   ├── data/
+│   │   └── genericFallback.ts         — server-side fallback responses
+│   ├── types/
+│   │   └── index.ts                   — API request/response types
+│   └── index.ts                       — Express app entry point
+├── .env                               — LLM_API_KEY (never committed)
+├── .env.example                       — template for required variables
+└── package.json
 ```
 
 ---
@@ -87,21 +105,41 @@ cd ChatgptPerspective
 npm install
 ```
 
-### 2. Set up environment
+### 2. Install backend dependencies
 
-Create a `.env` file at the project root:
-
+```bash
+cd server
+npm install
+cd ..
 ```
-VITE_LLM_API_KEY=your_google_api_key_here
-VITE_LLM_MODEL=gemini-2.0-flash-lite
+
+### 3. Set up environment
+
+**Frontend** — create `.env` at the project root:
+```
+VITE_API_BASE_URL=http://localhost:3001
 ```
 
-Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey). Create a **new project** for a fresh quota (free tier: 1,500 requests/day).
+**Backend** — create `server/.env`:
+```
+LLM_API_KEY=your_google_api_key_here
+LLM_MODEL=gemini-2.5-flash-lite
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+```
 
-> **Never commit `.env`** — it is already in `.gitignore`.
+Get a free API key from [Google AI Studio](https://aistudio.google.com/app/apikey). Create a **new project** for a fresh quota.
 
-### 3. Run
+> **Never commit `.env` or `server/.env`** — both are already in `.gitignore`.
 
+### 4. Run both servers
+
+**Terminal 1 — Backend:**
+```bash
+cmd /c "cd server && node_modules\.bin\tsx src/index.ts"
+```
+
+**Terminal 2 — Frontend:**
 ```bash
 npm run dev
 ```
@@ -127,8 +165,9 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 | Decision | Rationale |
 |----------|-----------|
+| Business logic in backend | API key never exposed to the browser; Gemini SDK runs server-side only |
 | 1 API call per user action | Combines answer + chips (or branch + child chips) in a single JSON response to stay within free-tier rate limits |
-| `gemini-2.0-flash-lite` | Lowest latency + highest free-tier quota of available Gemini models |
+| `gemini-2.5-flash-lite` | Fast, capable model with available free-tier quota |
 | Framing as "exploratory perspectives" | System prompts explicitly avoid "correct/wrong" language; outputs are always presented as possibilities, never verdicts |
 | Max depth = 3 | Prevents runaway recursion; terminal nodes render as collapsed summaries |
 | L1 branches are always parallel | Expanding one branch never auto-collapses another; all parallel explorations remain visible |
@@ -138,12 +177,22 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## Environment Variables
 
+**Frontend** (`.env` at project root):
+
 | Variable | Description |
 |----------|-------------|
-| `VITE_LLM_API_KEY` | Google Gemini API key (required) |
-| `VITE_LLM_MODEL` | Gemini model name (default: `gemini-2.0-flash-lite`) |
+| `VITE_API_BASE_URL` | Backend URL (default: `http://localhost:3001`) |
 
-> `.env` changes require a dev server restart (`Ctrl+C` → `npm run dev`).
+**Backend** (`server/.env`):
+
+| Variable | Description |
+|----------|-------------|
+| `LLM_API_KEY` | Google Gemini API key — **never exposed to browser** |
+| `LLM_MODEL` | Gemini model name (default: `gemini-2.5-flash-lite`) |
+| `PORT` | Backend port (default: `3001`) |
+| `FRONTEND_URL` | Allowed CORS origin (default: `http://localhost:5173`) |
+
+> Restart the relevant server after changing its `.env`.
 
 ---
 

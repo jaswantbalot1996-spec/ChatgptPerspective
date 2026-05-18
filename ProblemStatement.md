@@ -325,39 +325,29 @@ Typography:
 LLM API INTEGRATION
 -----------------------------------
 
-This prototype must support real LLM-generated responses using an API key.
+This prototype supports real LLM-generated responses via a secure backend.
 
-Use an environment variable:
+The API key is stored server-side only — never in the frontend:
 
-VITE_LLM_API_KEY=your_api_key_here
+**Backend** — `server/.env`:
+```
+LLM_API_KEY=your_api_key_here
+LLM_MODEL=gemini-2.5-flash-lite
+PORT=3001
+FRONTEND_URL=http://localhost:5173
+```
 
-Do not hardcode the API key in the frontend source code.
+**Frontend** — `.env` at project root:
+```
+VITE_API_BASE_URL=http://localhost:3001
+```
 
-Create an LLM service layer:
+The frontend LLM service layer (`src/services/llmService.ts`) makes `fetch` calls to the Express backend.
+The backend (`server/`) holds the Gemini SDK, API key, and prompt engineering — nothing sensitive reaches the browser.
 
-src/services/llmService.ts
-
-This service should expose functions:
-
-1. generatePrimaryAnswer(userPrompt)
-- Generates the main ChatGPT-style response.
-
-2. generatePerspectivePrompts(context)
-- Takes the user prompt, main answer, conversation context, and current branch path.
-- Returns 3–5 context-aware perspective-triggered follow-up prompts.
-- These prompts should NOT be generic positive/negative/neutral prompts.
-- They should be dynamically generated based on:
-  - task type
-  - domain
-  - possible missing context
-  - assumptions
-  - risks
-  - long-term implications
-  - user constraints
-
-3. expandPerspectiveBranch(selectedPrompt, context)
-- Generates the detailed response for the selected perspective prompt.
-- Should explain what this perspective reveals, what assumptions may exist, and what information may be missing.
+**Backend API (Express — `server/src/`):**
+- `POST /api/explore` — returns `{ answer, prompts[] }` (replaces generatePrimaryAnswer + generatePerspectivePrompts)
+- `POST /api/expand` — returns `{ title, content, risks[], ..., childPrompts[] }` (replaces expandPerspectiveBranch + generateRecursivePrompts)
 
 4. generateRecursivePrompts(branchContext)
 - After a branch response is generated, create 3–5 deeper follow-up prompts related to that branch.

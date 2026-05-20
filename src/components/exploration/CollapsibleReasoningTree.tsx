@@ -20,10 +20,10 @@ export default function CollapsibleReasoningTree() {
 
   if (!graph) return null
 
-  // Collect L1 branches that are currently expanded, sorted oldest-first
+  // Collect L1 branches that are currently expanded or loading, sorted oldest-first
   const l1Branches = [...expandedBranchIds]
     .map((id) => graph.nodes[id])
-    .filter((n): n is NonNullable<typeof n> => !!n && n.depth === 1 && n.isExpanded)
+    .filter((n): n is NonNullable<typeof n> => !!n && n.depth === 1 && (n.isExpanded || n.status === 'loading'))
     .sort((a, b) => a.createdAt - b.createdAt)
 
   if (l1Branches.length === 0) {

@@ -265,6 +265,7 @@ export async function expandBranch(
   s.setGraph({ ...graph, nodes: { ...graph.nodes, [chipId]: loadingNode } })
 
   if (depth === 1) {
+    s.toggleBranch(chipId)   // add to expandedBranchIds immediately so tree renders the loading node
     s.openSidePanel(chipId)
     s.setActiveFocus(chipId)
   }
@@ -290,7 +291,8 @@ export async function expandBranch(
     status: 'ready',
   }
   s.updateNode(chipId, readyNode)
-  s.toggleBranch(chipId)
+  // toggleBranch already called when loading node was created (depth === 1)
+  // so the node stays in expandedBranchIds — no second call needed
   s.setBreadcrumbPath(buildBreadcrumb(chipId, s.getGraph() ?? freshGraph))
 }
 

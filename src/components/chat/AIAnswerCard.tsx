@@ -56,8 +56,31 @@ export default function AIAnswerCard() {
   const graph = useExplorationStore((s) => s.graph)
   const userQuestion = useExplorationStore((s) => s.userQuestion)
 
-  // Nothing to show until exploration has started
-  if (rootStatus === 'idle' || !graph) return null
+  // Nothing to show until exploration has started or is loading
+  if (rootStatus === 'idle') return null
+  if (rootStatus === 'loading' && !graph) {
+    // First-prompt loading state: graph doesn't exist yet
+    return (
+      <>
+        {userQuestion && (
+          <div className="flex justify-end">
+            <div className="max-w-[75%] rounded-3xl bg-[#303030] px-5 py-3 text-[15px] leading-relaxed">
+              {userQuestion}
+            </div>
+          </div>
+        )}
+        <div className="flex gap-4">
+          <div className="w-8 h-8 rounded-full bg-[#10a37f] flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+            ✦
+          </div>
+          <div className="flex-1 min-w-0">
+            <ShimmerSkeleton />
+          </div>
+        </div>
+      </>
+    )
+  }
+  if (!graph) return null
 
   return (
     <>

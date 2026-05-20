@@ -72,6 +72,10 @@ export function buildFallbackGraph(userQuestion: string): ReasoningGraph {
   return {
     rootQuestion: userQuestion,
     rootAnswer: FALLBACK_ANSWER,
+    rootRisks: [],
+    rootAssumptions: [],
+    rootImplications: [],
+    rootHiddenTradeoffs: [],
     rootStatus: 'ready',
     rootPrompts: FALLBACK_PROMPT_CHIPS,
     nodes: {},

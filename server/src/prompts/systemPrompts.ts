@@ -12,10 +12,15 @@ Never imply the AI is a final authority.
 Return valid JSON in this exact shape:
 {
   "answer": "string (plain prose, 2-4 paragraphs)",
+  "risks": ["string"],
+  "assumptions": ["string"],
+  "implications": ["string"],
+  "hiddenTradeoffs": ["string"],
   "prompts": [
     { "id": "string", "label": "string", "heatScore": number }
   ]
 }
+Each of risks, assumptions, implications, hiddenTradeoffs should have 2 to 4 items.
 heatScore must be a float between 0 and 1. Generate 3 to 5 prompts.
 `.trim()
 

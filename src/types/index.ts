@@ -30,6 +30,10 @@ export interface PromptChip {
 export interface ReasoningGraph {
   rootQuestion: string
   rootAnswer: string
+  rootRisks: string[]
+  rootAssumptions: string[]
+  rootImplications: string[]
+  rootHiddenTradeoffs: string[]
   rootStatus: NodeStatus
   rootPrompts: PromptChip[]       // level-1 chips below the main answer
   nodes: Record<string, PerspectiveNode>

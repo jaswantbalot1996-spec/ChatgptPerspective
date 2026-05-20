@@ -92,16 +92,24 @@ export async function explore(
 
     const parsed = JSON.parse(result.response.text()) as {
       answer: string
+      risks: string[]
+      assumptions: string[]
+      implications: string[]
+      hiddenTradeoffs: string[]
       prompts: { id?: string; label: string; heatScore?: number }[]
     }
 
     return {
       answer: parsed.answer,
+      risks: parsed.risks ?? [],
+      assumptions: parsed.assumptions ?? [],
+      implications: parsed.implications ?? [],
+      hiddenTradeoffs: parsed.hiddenTradeoffs ?? [],
       prompts: parsed.prompts.map(normaliseChip),
     }
   } catch (err) {
     console.error('[LLM] explore failed:', err)
-    return { answer: FALLBACK_ANSWER, prompts: FALLBACK_PROMPT_CHIPS }
+    return { answer: FALLBACK_ANSWER, risks: [], assumptions: [], implications: [], hiddenTradeoffs: [], prompts: FALLBACK_PROMPT_CHIPS }
   }
 }
 

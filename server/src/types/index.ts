@@ -52,6 +52,10 @@ export interface ExploreRequest {
 
 export interface ExploreResponse {
   answer: string
+  risks: string[]
+  assumptions: string[]
+  implications: string[]
+  hiddenTradeoffs: string[]
   prompts: PromptChip[]
 }
 

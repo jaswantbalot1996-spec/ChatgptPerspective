@@ -24,7 +24,14 @@ export type BranchContent = Omit<
 >
 
 // --- Combined result types ------------------------------------
-export type RootExplorationResult = { answer: string; prompts: PromptChip[] }
+export type RootExplorationResult = {
+  answer: string
+  risks: string[]
+  assumptions: string[]
+  implications: string[]
+  hiddenTradeoffs: string[]
+  prompts: PromptChip[]
+}
 export type BranchWithPromptsResult = BranchContent & { childPrompts: PromptChip[] }
 
 // --- Helper: POST to backend ----------------------------------

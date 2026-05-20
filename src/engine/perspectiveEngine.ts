@@ -139,10 +139,18 @@ export async function startExploration(userPrompt: string): Promise<void> {
 
   const rootAnswer = isLLMError(result) ? FALLBACK_ANSWER : result.answer
   const rootPrompts: PromptChip[] = isLLMError(result) ? FALLBACK_PROMPT_CHIPS : result.prompts
+  const rootRisks = isLLMError(result) ? [] : result.risks
+  const rootAssumptions = isLLMError(result) ? [] : result.assumptions
+  const rootImplications = isLLMError(result) ? [] : result.implications
+  const rootHiddenTradeoffs = isLLMError(result) ? [] : result.hiddenTradeoffs
 
   const readyGraph: ReasoningGraph = {
     rootQuestion: userPrompt,
     rootAnswer,
+    rootRisks,
+    rootAssumptions,
+    rootImplications,
+    rootHiddenTradeoffs,
     rootStatus: 'ready',
     rootPrompts,
     nodes: {},
